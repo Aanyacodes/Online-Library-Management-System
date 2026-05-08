@@ -78,4 +78,4 @@ Aanya Singh
 ![Page to register new liabrarian](./Screenshots/Screenshots/page-to-register-new-liabrarian.png)
 
 ### Book Borrowed Page
-![Book Borrowed](./Screenshots/book-borrowed.png)
+![Book Borrowed](./Screenshots/Screenshots/book-borrowed.png)

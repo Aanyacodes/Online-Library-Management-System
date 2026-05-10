@@ -7,13 +7,13 @@ import java.sql.SQLException;
 public class createDBConnection {
 
     private static final String URL =
-            "jdbc:mysql://localhost:3306/LMSAdmin";
+            System.getenv("DB_URL");
 
     private static final String USER =
-            "LMSAdmin";
+            System.getenv("DB_USER");
 
     private static final String PASSWORD =
-            "Lm$Adm!n@2026";
+            System.getenv("DB_PASSWORD");
 
     public static Connection getConnection()
             throws SQLException {

@@ -10,7 +10,7 @@ FROM eclipse-temurin:17
 
 WORKDIR /app
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/target/*jar-with-dependencies.jar app.jar
 
 EXPOSE 10000
 

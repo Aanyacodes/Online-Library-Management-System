@@ -14,18 +14,22 @@ public class Main {
         BookDAO bookDAO = new BookDAO();
         TransactionDAO transactionDAO = new TransactionDAO();
         // 2. Start the Javalin Web Server on port 7070
-        Javalin app = Javalin.create(config -> {
-            // Pointing directly to your raw folder so Maven doesn't get confused!
-            config.staticFiles.add("/public", Location.CLASSPATH);
-            
-            // Allow our frontend to talk to our backend
-            config.bundledPlugins.enableCors(cors -> {
-                cors.addRule(it -> it.anyHost());
-            });
-        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "7070"));
+       int port = Integer.parseInt(
+        System.getenv().getOrDefault("PORT", "7070")
+);
+
+Javalin app = Javalin.create(config -> {
+
+    config.staticFiles.add(
+            "/public",
+            Location.CLASSPATH
+    );
+
+    config.bundledPlugins.enableCors(cors -> {
+        cors.addRule(it -> it.anyHost());
+    });
 
 }).start(port);
-
         System.out.println("🚀 LMS Web Server is running at http://localhost:7070");
 
         // ==========================================

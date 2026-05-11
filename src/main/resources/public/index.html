@@ -1,80 +1,185 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
 
-async function attemptLogin() {
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Portal</title>
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    <style>
 
-    const role =
-        document.querySelector('input[name="role"]:checked').value;
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #dfe7f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-    const messageDiv = document.getElementById('message');
-    const btn = document.querySelector('button');
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            width: 350px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
 
-    btn.innerText = "Signing in...";
-    btn.disabled = true;
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    messageDiv.innerText = "";
-    messageDiv.style.color = "#4a5568";
+        .role-selector {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
 
-    try {
+        input[type="email"],
+        input[type="password"] {
 
-        const response = await fetch('/api/login', {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
 
-            method: 'POST',
+        button {
 
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: #2f74c0;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
 
-            body: JSON.stringify({
-                email: email,
-                password: password,
-                role: role
-            })
-        });
+        button:hover {
+            background: #255e9c;
+        }
 
-        const data = await response.json();
+        #message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
 
-        if (response.ok && data.status === 'success') {
+    </style>
 
-            messageDiv.style.color = "#38a169";
-            messageDiv.innerText = "✅ Login successful! Redirecting...";
+</head>
 
-            localStorage.setItem('userId', data.userId);
-            localStorage.setItem('userRole', data.role);
+<body>
 
-            setTimeout(() => {
+    <div class="login-box">
 
-                if (data.role === 'librarian') {
+        <h1>Library Portal</h1>
 
-                    window.location.href = '/librarian.html';
+        <div class="role-selector">
+
+            <label>
+                <input type="radio" name="role" value="member" checked>
+                Member
+            </label>
+
+            <label>
+                <input type="radio" name="role" value="librarian">
+                Librarian
+            </label>
+
+        </div>
+
+        <input type="email" id="email" placeholder="Email Address">
+
+        <input type="password" id="password" placeholder="Password">
+
+        <button onclick="login()">
+            Sign In
+        </button>
+
+        <div id="message"></div>
+
+    </div>
+
+    <script>
+
+        async function login() {
+
+            const email =
+                document.getElementById("email").value;
+
+            const password =
+                document.getElementById("password").value;
+
+            const role =
+                document.querySelector('input[name="role"]:checked').value;
+
+            const message =
+                document.getElementById("message");
+
+            try {
+
+                const response = await fetch("/api/login", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        role
+                    })
+
+                });
+
+                const data = await response.json();
+
+                if (data.status === "success") {
+
+                    message.style.color = "green";
+                    message.innerText =
+                        "Login Successful";
+
+                    if (role === "member") {
+
+                        window.location.href =
+                            "member.html";
+
+                    } else {
+
+                        window.location.href =
+                            "librarian.html";
+                    }
 
                 } else {
 
-                    window.location.href = '/member.html';
+                    message.style.color = "red";
+                    message.innerText =
+                        data.message;
                 }
 
-            }, 1000);
+            } catch (error) {
 
-        } else {
+                console.error(error);
 
-            messageDiv.style.color = "#e53e3e";
-            messageDiv.innerText = "❌ " + data.message;
+                message.style.color = "red";
+
+                message.innerText =
+                    "Unable to connect to server.";
+            }
+
         }
 
-    } catch (error) {
+    </script>
 
-        console.error(error);
-
-        messageDiv.style.color = "#e53e3e";
-        messageDiv.innerText = "❌ Unable to connect to server.";
-
-    } finally {
-
-        btn.innerText = "Sign In";
-        btn.disabled = false;
-    }
-}
-
-</script>
+</body>
+</html>

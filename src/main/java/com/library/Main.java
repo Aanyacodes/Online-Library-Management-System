@@ -319,6 +319,25 @@ public class Main {
         // START SERVER
         // ==========================================
 
+        app.get("/create-test-librarian", ctx -> {
+
+    boolean success =
+        librarianDAO.registerLibrarian(
+            "Admin",
+            "saanya@gmail.com",
+            "123456"
+        );
+
+    if(success){
+
+        ctx.result("Test librarian created");
+
+    } else {
+
+        ctx.result("Librarian already exists");
+    }
+
+});
         app.start(port);
 
         System.out.println(

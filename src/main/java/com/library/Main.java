@@ -2,169 +2,327 @@ package com.library;
 
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
-import java.util.Map;
+
 import java.util.List;
+import java.util.Map;
 
 public class Main {
+
     public static void main(String[] args) {
-        
-        // 1. Initialize BOTH DAOs here
+
+        // ==========================================
+        // DATABASE OBJECTS
+        // ==========================================
+
         UserDAO userDAO = new UserDAO();
         LibrarianDAO librarianDAO = new LibrarianDAO();
         BookDAO bookDAO = new BookDAO();
         TransactionDAO transactionDAO = new TransactionDAO();
-        // 2. Start the Javalin Web Server on port 7070
-       int port = Integer.parseInt(
-        System.getenv().getOrDefault("PORT", "7070")
-);
-
-Javalin app = Javalin.create(config -> {
-
-    config.staticFiles.add(
-            "/public",
-            Location.CLASSPATH
-    );
-
-    config.bundledPlugins.enableCors(cors -> {
-        cors.addRule(it -> it.anyHost());
-    });
-
-}).start(port);
-        System.out.println("🚀 LMS Web Server is running at http://localhost:7070");
 
         // ==========================================
-        // REST API ENDPOINTS
+        // PORT CONFIGURATION
         // ==========================================
 
-        // Unified Login API (Handles both Members and Librarians)
+        int port = Integer.parseInt(
+                System.getenv().getOrDefault("PORT", "7070")
+        );
+
+        // ==========================================
+        // CREATE JAVALIN APP
+        // ==========================================
+
+        Javalin app = Javalin.create(config -> {
+
+            // Serve frontend files
+            config.staticFiles.add("/public", Location.CLASSPATH);
+
+            // Enable CORS
+            config.bundledPlugins.enableCors(cors -> {
+                cors.addRule(it -> it.anyHost());
+            });
+
+        });
+
+        // ==========================================
+        // HEALTH CHECK API
+        // ==========================================
+
+        app.get("/api/test", ctx -> {
+            ctx.result("Backend is working successfully!");
+        });
+
+        // ==========================================
+        // LOGIN API
+        // ==========================================
+
         app.post("/api/login", ctx -> {
+
             Map<String, String> loginData = ctx.bodyAsClass(Map.class);
+
             String email = loginData.get("email");
             String password = loginData.get("password");
-            String role = loginData.get("role"); // Getting the radio button choice!
+            String role = loginData.get("role");
 
             if ("librarian".equals(role)) {
-                // Route to Librarian Database
+
                 String libId = librarianDAO.loginLibrarian(email, password);
+
                 if (libId != null) {
-                    ctx.json(Map.of("status", "success", "role", "librarian", "userId", libId));
+
+                    ctx.json(Map.of(
+                            "status", "success",
+                            "role", "librarian",
+                            "userId", libId
+                    ));
+
                 } else {
-                    ctx.status(401).json(Map.of("status", "error", "message", "Invalid Librarian credentials"));
+
+                    ctx.status(401).json(Map.of(
+                            "status", "error",
+                            "message", "Invalid Librarian credentials"
+                    ));
                 }
+
             } else {
-                // Route to Member Database
+
                 boolean success = userDAO.loginUser(email, password);
+
                 if (success) {
+
                     String userId = userDAO.getUserIdByEmail(email);
-                    ctx.json(Map.of("status", "success", "role", "member", "userId", userId));
+
+                    ctx.json(Map.of(
+                            "status", "success",
+                            "role", "member",
+                            "userId", userId
+                    ));
+
                 } else {
-                    ctx.status(401).json(Map.of("status", "error", "message", "Invalid Member credentials"));
+
+                    ctx.status(401).json(Map.of(
+                            "status", "error",
+                            "message", "Invalid Member credentials"
+                    ));
                 }
             }
         });
+
+        // ==========================================
+        // ADD BOOK API
+        // ==========================================
+
         app.post("/api/books", ctx -> {
+
             Map<String, String> bookData = ctx.bodyAsClass(Map.class);
-            
+
             String title = bookData.get("title");
             String author = bookData.get("author");
             String isbn = bookData.get("isbn");
             String publisher = bookData.get("publisher");
             String genre = bookData.get("genre");
+
             int year = Integer.parseInt(bookData.get("year"));
             int copies = Integer.parseInt(bookData.get("copies"));
-            int available_copies = Integer.parseInt(bookData.get("available_copies"));
+            int availableCopies = Integer.parseInt(bookData.get("available_copies"));
 
-            // Call your EXACT existing BookDAO!
-            boolean success = bookDAO.addBook(title, author, isbn, publisher, genre, year, copies, available_copies);
+            boolean success = bookDAO.addBook(
+                    title,
+                    author,
+                    isbn,
+                    publisher,
+                    genre,
+                    year,
+                    copies,
+                    availableCopies
+            );
 
             if (success) {
-                ctx.json(Map.of("status", "success", "message", "Book added to catalog!"));
+
+                ctx.json(Map.of(
+                        "status", "success",
+                        "message", "Book added successfully"
+                ));
+
             } else {
-                ctx.status(500).json(Map.of("status", "error", "message", "Database error. Could not add book."));
+
+                ctx.status(500).json(Map.of(
+                        "status", "error",
+                        "message", "Could not add book"
+                ));
             }
         });
-        // 3. Get All Books API
+
+        // ==========================================
+        // VIEW ALL BOOKS API
+        // ==========================================
+
         app.get("/api/books", ctx -> {
-            // Call your newly modified method!
+
             List<Map<String, Object>> books = bookDAO.viewAllBooks();
+
             ctx.json(books);
         });
+
+        // ==========================================
+        // BORROW BOOK API
+        // ==========================================
+
         app.post("/api/borrow", ctx -> {
+
             Map<String, String> requestData = ctx.bodyAsClass(Map.class);
+
             String userId = requestData.get("userId");
             String bookId = requestData.get("bookId");
 
-            // CALLING YOUR METHOD HERE!
             boolean success = transactionDAO.issueBook(userId, bookId);
 
             if (success) {
-                ctx.json(Map.of("status", "success", "message", "Book successfully borrowed! Due in 14 days."));
+
+                ctx.json(Map.of(
+                        "status", "success",
+                        "message", "Book borrowed successfully"
+                ));
+
             } else {
-                ctx.status(400).json(Map.of("status", "error", "message", "Book is unavailable or an error occurred."));
+
+                ctx.status(400).json(Map.of(
+                        "status", "error",
+                        "message", "Book unavailable"
+                ));
             }
         });
-        // 5. Get Borrowed Books API (For the Member Dashboard)
+
+        // ==========================================
+        // VIEW BORROWED BOOKS API
+        // ==========================================
+
         app.get("/api/borrowed/{userId}", ctx -> {
-            // Javalin reads the {userId} directly from the URL!
-            String userId = ctx.pathParam("userId"); 
-            List<Map<String, Object>> borrowedBooks = transactionDAO.getBorrowedBooks(userId);
+
+            String userId = ctx.pathParam("userId");
+
+            List<Map<String, Object>> borrowedBooks =
+                    transactionDAO.getBorrowedBooks(userId);
+
             ctx.json(borrowedBooks);
         });
 
-        // 6. Return Book API
-        // 6. Return Book API (Now with Fine Calculation!)
+        // ==========================================
+        // RETURN BOOK API
+        // ==========================================
+
         app.post("/api/return", ctx -> {
+
             Map<String, String> requestData = ctx.bodyAsClass(Map.class);
+
             String userId = requestData.get("userId");
             String bookId = requestData.get("bookId");
 
-            // Catch the fine amount returned by our updated DAO
             double fine = transactionDAO.returnBook(userId, bookId);
 
-            if (fine >= 0.0) {
-                if (fine > 0.0) {
-                    // String.format("%.2f", fine) ensures it looks like money (e.g., $5.00)
-                    String msg = "Book returned! Note: You have a late fee of $" + String.format("%.2f", fine);
-                    ctx.json(Map.of("status", "success", "message", msg));
+            if (fine >= 0) {
+
+                if (fine > 0) {
+
+                    String msg =
+                            "Book returned successfully. Fine: ₹"
+                                    + String.format("%.2f", fine);
+
+                    ctx.json(Map.of(
+                            "status", "success",
+                            "message", msg
+                    ));
+
                 } else {
-                    ctx.json(Map.of("status", "success", "message", "Book returned on time. No late fees!"));
+
+                    ctx.json(Map.of(
+                            "status", "success",
+                            "message", "Book returned successfully"
+                    ));
                 }
+
             } else {
-                ctx.status(400).json(Map.of("status", "error", "message", "Could not process return."));
+
+                ctx.status(400).json(Map.of(
+                        "status", "error",
+                        "message", "Return failed"
+                ));
             }
         });
-        // 7. Register New Member API
+
+        // ==========================================
+        // REGISTER MEMBER API
+        // ==========================================
+
         app.post("/api/members", ctx -> {
+
             Map<String, String> data = ctx.bodyAsClass(Map.class);
-            // Pass all 6 fields to your DAO!
+
             boolean success = userDAO.registerUser(
-                data.get("first_name"), data.get("last_name"), 
-                data.get("email"), data.get("phone"), 
-                data.get("password"), data.get("address")
+                    data.get("first_name"),
+                    data.get("last_name"),
+                    data.get("email"),
+                    data.get("phone"),
+                    data.get("password"),
+                    data.get("address")
             );
+
             if (success) {
-                ctx.json(Map.of("status", "success", "message", "Member successfully registered!"));
+
+                ctx.json(Map.of(
+                        "status", "success",
+                        "message", "Member registered successfully"
+                ));
+
             } else {
-                ctx.status(400).json(Map.of("status", "error", "message", "Email already exists or error occurred."));
+
+                ctx.status(400).json(Map.of(
+                        "status", "error",
+                        "message", "Registration failed"
+                ));
             }
         });
 
-        // 8. Register New Librarian API
+        // ==========================================
+        // REGISTER LIBRARIAN API
+        // ==========================================
+
         app.post("/api/librarians", ctx -> {
+
             Map<String, String> data = ctx.bodyAsClass(Map.class);
+
             boolean success = librarianDAO.registerLibrarian(
-                data.get("first_name"), data.get("last_name"), 
-                data.get("email"), data.get("phone"), 
-                data.get("password"), data.get("address")
+                    data.get("first_name"),
+                    data.get("last_name"),
+                    data.get("email"),
+                    data.get("phone"),
+                    data.get("password"),
+                    data.get("address")
             );
+
             if (success) {
-                ctx.json(Map.of("status", "success", "message", "Librarian successfully registered!"));
+
+                ctx.json(Map.of(
+                        "status", "success",
+                        "message", "Librarian registered successfully"
+                ));
+
             } else {
-                ctx.status(400).json(Map.of("status", "error", "message", "Email already exists or error occurred."));
+
+                ctx.status(400).json(Map.of(
+                        "status", "error",
+                        "message", "Registration failed"
+                ));
             }
         });
-        
-        
 
+        // ==========================================
+        // START SERVER
+        // ==========================================
+
+        app.start(port);
+
+        System.out.println(
+                "🚀 LMS Web Server is running on port " + port
+        );
     }
 }

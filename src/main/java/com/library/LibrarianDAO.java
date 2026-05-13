@@ -64,7 +64,8 @@ public class LibrarianDAO {
 
             return false;
 
-        }  catch (SQLException e) {
+        }  
+        catch (SQLException e) {
 
     e.printStackTrace();
 

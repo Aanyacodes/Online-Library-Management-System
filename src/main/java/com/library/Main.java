@@ -339,7 +339,7 @@ app.get("/create-test-librarian", ctx -> {
 
     } else {
 
-        ctx.result("Librarian already exists");
+       ctx.result("Librarian creation failed");
     }
 });
 

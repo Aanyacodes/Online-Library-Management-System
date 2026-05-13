@@ -3,6 +3,8 @@ package com.library;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 
@@ -315,23 +317,23 @@ public class Main {
             }
         });
 
-        // ==========================================
-        // START SERVER
-        // ==========================================
+       // ==========================================
+// TEST LIBRARIAN CREATION ROUTE
+// ==========================================
 
-        app.get("/create-test-librarian", ctx -> {
+app.get("/create-test-librarian", ctx -> {
 
     boolean success =
-        librarianDAO.registerLibrarian(
-            "Admin",
-            "User",
-            "admin@gmail.com",
-            "0000000000",
-            "123456",
-            "Lucknow"
-        );
+            librarianDAO.registerLibrarian(
+                    "Admin",
+                    "User",
+                    "admin@gmail.com",
+                    "0000000000",
+                    "123456",
+                    "Lucknow"
+            );
 
-    if(success){
+    if (success) {
 
         ctx.result("Test librarian created");
 
@@ -339,12 +341,43 @@ public class Main {
 
         ctx.result("Librarian already exists");
     }
-
 });
-        app.start(port);
 
-        System.out.println(
-                "🚀 LMS Web Server is running on port " + port
-        );
+
+// ==========================================
+// DELETE TEST LIBRARIAN ROUTE
+// ==========================================
+
+app.get("/delete-test-librarian", ctx -> {
+
+    try (Connection conn =
+                 createDBConnection.getConnection();
+
+         PreparedStatement pstmt =
+                 conn.prepareStatement(
+                         "DELETE FROM librarian_details WHERE email = ?")) {
+
+        pstmt.setString(1, "admin@gmail.com");
+
+        int rows = pstmt.executeUpdate();
+
+        ctx.result("Deleted rows: " + rows);
+
+    } catch (Exception e) {
+
+        ctx.result("Error: " + e.getMessage());
+    }
+});
+
+
+// ==========================================
+// START SERVER
+// ==========================================
+
+app.start(port);
+
+System.out.println(
+        "LMS Web Server is running on port " + port
+);
     }
 }

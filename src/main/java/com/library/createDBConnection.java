@@ -119,7 +119,7 @@ public class createDBConnection {
 
         } catch (Exception e) {
 
-            System.out.println("❌ Database setup failed!");
+            System.out.println("Database setup failed!");
             e.printStackTrace();
         }
     }

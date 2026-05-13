@@ -324,8 +324,11 @@ public class Main {
     boolean success =
         librarianDAO.registerLibrarian(
             "Admin",
-            "saanya@gmail.com",
-            "123456"
+            "User",
+            "admin@gmail.com",
+            "0000000000",
+            "123456",
+            "Lucknow"
         );
 
     if(success){

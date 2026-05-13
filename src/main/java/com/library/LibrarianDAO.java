@@ -27,6 +27,10 @@ public class LibrarianDAO {
                         .substring(0, 5)
                         .toUpperCase();
 
+        // Hash password before storing
+        String hashedPassword =
+                PasswordUtil.hashPassword(password);
+
         String sql =
                 "INSERT INTO librarian_details " +
                 "(librarianId, first_name, last_name, email, phone_number, password, address) " +
@@ -43,7 +47,7 @@ public class LibrarianDAO {
             pstmt.setString(3, lastName);
             pstmt.setString(4, email);
             pstmt.setString(5, phone);
-            pstmt.setString(6, password);
+            pstmt.setString(6, hashedPassword);
             pstmt.setString(7, address);
 
             int rowsAffected =
@@ -52,7 +56,7 @@ public class LibrarianDAO {
             if (rowsAffected > 0) {
 
                 System.out.println(
-                        "Librarian ID Generated: "
+                        "Librarian created successfully: "
                                 + uniqueId);
 
                 return true;
@@ -98,10 +102,14 @@ public class LibrarianDAO {
                     String storedHash =
                             rs.getString("password");
 
-                    // Verify password
-                    if (PasswordUtil.checkPassword(
-                            rawPassword,
-                            storedHash)) {
+                    // Verify password using BCrypt
+                    boolean passwordMatch =
+                            PasswordUtil.checkPassword(
+                                    rawPassword,
+                                    storedHash
+                            );
+
+                    if (passwordMatch) {
 
                         return rs.getString(
                                 "librarianId");

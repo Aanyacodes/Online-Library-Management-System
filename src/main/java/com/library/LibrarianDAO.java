@@ -64,11 +64,9 @@ public class LibrarianDAO {
 
             return false;
 
-        } catch (SQLException e) {
+        }  catch (SQLException e) {
 
-            System.err.println(
-                    "Database Error: "
-                            + e.getMessage());
+    e.printStackTrace();
 
             return false;
         }
